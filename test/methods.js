@@ -236,7 +236,7 @@ test("minlength", function() {
 		param = 2,
 		e = $("#text1, #text1c, #text2, #text3");
 	ok( method.call( v, e[0].value, e[0], param), "Valid text input" );
-	ok(!method.call( v, e[1].value, e[1], param), "Invalid text input" );
+	ok( method.call( v, e[1].value, e[1], param), "Valid text input" );
 	ok(!method.call( v, e[2].value, e[2], param), "Invalid text input" );
 	ok( method.call( v, e[3].value, e[3], param), "Valid text input" );
 
@@ -918,6 +918,13 @@ test("pattern", function() {
 	ok( method( "AR1004", "AR\\d{4}" ), "Correct format for the given RegExp" );
 	ok( method( "AR1004", /^AR\d{4}$/ ), "Correct format for the given RegExp" );
 	ok(!method( "BR1004", /^AR\d{4}$/ ), "Invalid format for the given RegExp" );
+	ok( method( "1ABC", "[0-9][A-Z]{3}" ), "Correct format for the given RegExp" );
+	ok(!method( "ABC", "[0-9][A-Z]{3}" ), "Invalid format for the given RegExp" );
+	ok(!method( "1ABC DEF", "[0-9][A-Z]{3}" ), "Invalid format for the given RegExp" );
+	ok( method( "1ABCdef", "[a-zA-Z0-9]+" ), "Correct format for the given RegExp" );
+	ok(!method( "1ABC def", "[a-zA-Z0-9]+" ), "Invalid format for the given RegExp" );
+	ok( method( "2014-10-02", "[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|1[0-9]|2[0-9]|3[01])" ), "Correct format for the given RegExp" );
+	ok(!method( "02-10-2014", "[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|1[0-9]|2[0-9]|3[01])" ), "Invalid format for the given RegExp" );
 });
 
 function testCardTypeByNumber(number, cardname, expected) {
@@ -999,9 +1006,9 @@ function fillFormWithValuesAndExpect(formSelector, inputValues, expected) {
 test("require_from_group", function() {
 	$("#productInfo").validate({
 		rules: {
-			partnumber: { require_from_group: [ 2,".productInfo" ] },
-			description: { require_from_group: [ 2,".productInfo" ] },
-			discount: { require_from_group: [ 2,".productInfo" ] }
+			partnumber: { require_from_group: [ 2, ".productInfo" ] },
+			description: { require_from_group: [ 2, ".productInfo" ] },
+			discount: { require_from_group: [ 2, ".productInfo" ] }
 		}
 	});
 
@@ -1018,9 +1025,9 @@ test("require_from_group", function() {
 test("require_from_group preserve other rules", function() {
 	$("#productInfo").validate({
 		rules: {
-			partnumber: { require_from_group: [ 2,".productInfo" ] },
-			description: { require_from_group: [ 2,".productInfo" ] },
-			color: { require_from_group: [ 2,".productInfo" ] },
+			partnumber: { require_from_group: [ 2, ".productInfo" ] },
+			description: { require_from_group: [ 2, ".productInfo" ] },
+			color: { require_from_group: [ 2, ".productInfo" ] },
 			supplier: { required: true }
 		}
 	});
@@ -1037,9 +1044,9 @@ test("require_from_group preserve other rules", function() {
 test("skip_or_fill_minimum", function() {
 	$("#productInfo").validate({
 		rules: {
-			partnumber:  { skip_or_fill_minimum: [ 2,".productInfo" ] },
-			description: { skip_or_fill_minimum: [ 2,".productInfo" ] },
-			color:       { skip_or_fill_minimum: [ 2,".productInfo" ] }
+			partnumber:  { skip_or_fill_minimum: [ 2, ".productInfo" ] },
+			description: { skip_or_fill_minimum: [ 2, ".productInfo" ] },
+			color:       { skip_or_fill_minimum: [ 2, ".productInfo" ] }
 		}
 	});
 
@@ -1052,9 +1059,9 @@ test("skip_or_fill_minimum", function() {
 test("skip_or_fill_minimum preserve other rules", function() {
 	$("#productInfo").validate({
 		rules: {
-			partnumber:  { skip_or_fill_minimum: [ 2,".productInfo" ] },
-			description: { skip_or_fill_minimum: [ 2,".productInfo" ] },
-			color:       { skip_or_fill_minimum: [ 2,".productInfo" ] },
+			partnumber:  { skip_or_fill_minimum: [ 2, ".productInfo" ] },
+			description: { skip_or_fill_minimum: [ 2, ".productInfo" ] },
+			color:       { skip_or_fill_minimum: [ 2, ".productInfo" ] },
 			supplier: { required: true }
 		}
 	});
@@ -1240,6 +1247,26 @@ test("postalCodeCA", function() {
 	ok( !method( "H0H 0H"), "Invalid CA Postal Code; Too Short" );
 	ok( !method( "Z0H 0H"), "Invalid CA Postal Code; Only 'ABCEGHJKLMNPRSTVXY' are valid starting characters" );
 	ok( !method( "h0h 0h0"), "Invalid CA Postal Code; Only upper case characters" );
+});
+
+test("stateUS", function() {
+	var method = methodTest("stateUS");
+	ok( method( "AZ" ), "Valid US state" );
+	ok( method( "OH" ), "Valid US state" );
+	ok( method( "DC" ), "Valid US state" );
+	ok( method( "PR", { includeTerritories: true } ), "Valid US territory" );
+	ok( method( "AA", { includeMilitary: true } ), "Valid US military zone" );
+	ok( method( "me", { caseSensitive: false } ), "Valid US state" );
+	ok(!method( "az", { caseSensitive: true } ), "Must be capital letters" );
+	ok(!method( "mp", { caseSensitive: false, includeTerritories: false } ), "US territories not allowed" );
+});
+
+test("postalcodeBR", function() {
+	var method = methodTest("postalcodeBR");
+	ok( method( "99999-999"), "Valid BR Postal Code");
+	ok( method( "99999999"), "Valid BR Postal Code");
+	ok( method( "99.999-999"), "Valid BR Postal Code");
+	ok( !method( "99.999999"), "Invalid BR Postal Code");
 });
 
 })(jQuery);

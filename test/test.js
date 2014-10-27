@@ -49,7 +49,7 @@ QUnit.assert.hasError = function( element, text, message ) {
 // Asserts that there is no visible error for the given element
 QUnit.assert.noErrorFor = function( element, message ) {
 	var errors = $( element ).closest( "form" ).validate().errorsFor( element[ 0 ] ),
-		hidden = ( errors.length === 0 ) || errors.is( ":hidden" ) || ( errors.text() === "" );
+		hidden = ( errors.length === 0 ) || (errors.is( ":hidden" ) && ( errors.text() === "" ) );
 	QUnit.push( hidden, hidden, true, message );
 };
 
@@ -103,6 +103,41 @@ test( "valid() plugin method, special handling for checkable groups", function()
 	ok( !checkable.valid(), "invalid again" );
 	$( "#checkable3" ).attr( "checked", true );
 	ok( checkable.valid(), "valid, third box is checked" );
+});
+
+test( "valid() ???", function() {
+	expect( 4 );
+	var errorList = [
+			{
+				name: "meal",
+				message: "foo",
+				element: $( "#meal" )[ 0 ]
+			}
+		],
+		v = $( "#testForm3" ).validate();
+
+	ok( v.valid(), "No errors, must be valid" );
+	v.errorList = errorList;
+	ok( !v.valid(), "One error, must be invalid" );
+	QUnit.reset();
+	v = $( "#testForm3" ).validate({
+		submitHandler: function() {
+			ok( false, "Submit handler was called" );
+		}
+	});
+	ok( v.valid(), "No errors, must be valid and returning true, even with the submit handler" );
+	v.errorList = errorList;
+	ok( !v.valid(), "One error, must be invalid, no call to submit handler" );
+});
+
+test( "valid(), ignores ignored elements", function() {
+	$( "#testForm1clean" ).validate({
+		ignore: "#firstnamec",
+		rules: {
+			firstnamec: "required"
+		}
+	});
+	ok( $( "#firstnamec" ).valid() );
 });
 
 test( "addMethod", function() {
@@ -296,31 +331,6 @@ test( "hide(): container", function() {
 	$( "#meal" )[ 0 ].selectedIndex = 1;
 	v.element( "#meal" );
 	ok( errorLabel.is( ":hidden" ), "Error label not visible after hiding it" );
-});
-
-test( "valid()", function() {
-	expect( 4 );
-	var errorList = [
-			{
-				name: "meal",
-				message: "foo",
-				element: $( "#meal" )[ 0 ]
-			}
-		],
-		v = $( "#testForm3" ).validate();
-
-	ok( v.valid(), "No errors, must be valid" );
-	v.errorList = errorList;
-	ok( !v.valid(), "One error, must be invalid" );
-	QUnit.reset();
-	v = $( "#testForm3" ).validate({
-		submitHandler: function() {
-			ok( false, "Submit handler was called" );
-		}
-	});
-	ok( v.valid(), "No errors, must be valid and returning true, even with the submit handler" );
-	v.errorList = errorList;
-	ok( !v.valid(), "One error, must be invalid, no call to submit handler" );
 });
 
 test( "submitHandler keeps submitting button", function() {
@@ -530,6 +540,7 @@ test( "option: (un)highlight, custom", function() {
 			equal( "invalid", errorClass );
 			$( element ).show();
 		},
+		ignore: "",
 		errorClass: "invalid",
 		rules: {
 			firstnamec: "required"
@@ -780,6 +791,12 @@ test( "dynamic form", function() {
 	v.form();
 	errors( 0 );
 	$( "#agb" ).attr( "disabled", false );
+	v.form();
+	errors( 1 );
+	$( "#agb" ).attr( "readonly", true );
+	v.form();
+	errors( 0 );
+	$( "#agb" ).attr( "readonly", false );
 	v.form();
 	errors( 1 );
 });
@@ -1700,4 +1717,25 @@ test( "Rules allowed to have a value of zero valid greater", function() {
 
 	label = $( "#ranges .error:not(input)" );
 	equal( label.text(), "", "Correct error label" );
+});
+
+test( "Validation triggered on radio and checkbox via click", function() {
+	expect( 2 );
+
+	var form = $( "#radiocheckbox" );
+
+	// init validate
+	form.validate();
+
+	// validate so we have errors
+	ok( !form.valid(), "Form invalid");
+
+	// simulate native click on first checkbox to trigger change-event
+	$( "#radiocheckbox-0-1" ).simulate( "click" );
+
+	// simulate native click on first radio to trigger change-event
+	$( "#radiocheckbox-1-1" ).simulate( "click" );
+
+	// test if there is no error anymore
+	ok( form.find( "input.error" ).length === 0, "Form valid" );
 });
