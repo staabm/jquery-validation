@@ -799,10 +799,10 @@ $.extend( $.validator, {
 					errorID = error.attr( "id" );
 					// Respect existing non-error aria-describedby
 					if ( !describedBy ) {
-						describedBy = errorID;
+						describedBy = errorID.replace( /(\[|\]|\$)/g, "\\$1");
 					} else if ( !describedBy.match( new RegExp( "\\b" + (errorID.replace( /(:|\.|\[|\]|\$)/g, "\\$1")) + "\\b" ) ) ) {
 						// Add to end of list if not already present
-						describedBy += " " + errorID;
+						describedBy += " " + (errorID.replace( /(\$)/g, "\\$1"));
 					}
 					$( element ).attr( "aria-describedby", describedBy );
 
@@ -812,7 +812,7 @@ $.extend( $.validator, {
 						$.each( this.groups, function( name, testgroup ) {
 							if ( testgroup === group ) {
 								$( "[name='" + name + "']", this.currentForm )
-									.attr( "aria-describedby", error.attr( "id" ) );
+									.attr( "aria-describedby", errorID );
 							}
 						});
 					}
